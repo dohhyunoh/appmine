@@ -3,7 +3,7 @@ import { runScrapingPipeline } from '@/lib/services/scraper';
 import { runAnalysisPipeline } from '@/lib/services/analyzer';
 import { normalizeKeyword } from '@/lib/utils';
 
-export const maxDuration = 600; // 10 minutes for full pipeline
+export const maxDuration = 300; // 5 minutes (max for Vercel Hobby plan)
 
 export async function POST(request: NextRequest) {
   try {
