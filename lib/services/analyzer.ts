@@ -206,7 +206,7 @@ OUTPUT JSON:
       analysis = analysis[0];
     }
 
-    console.log(`Saved. Found ${analysis.micro_niches?.length || 0} micro-niches`);
+    console.log(`Saved. Found ${analysis.micro_niches?.length || 0} opportunities`);
 
     return analysis;
 

@@ -118,20 +118,41 @@ export async function scrapeApps(
     console.log(`Processing: ${app.title}...`);
 
     try {
-      // Fetch Reviews
-      const reviews = await store.reviews({
-        id: app.id,
-        sort: store.sort.RECENT,
-        page: 1
-      });
+      // Fetch Reviews with pagination to get the requested amount
+      let allReviews: any[] = [];
+      let page = 1;
+      const reviewsPerPage = 50; // App Store API typically returns 50 reviews per page
+      
+      while (allReviews.length < reviewsPerApp) {
+        const pageReviews = await store.reviews({
+          id: app.id,
+          sort: store.sort.RECENT,
+          page: page
+        });
+        
+        if (!pageReviews || pageReviews.length === 0) {
+          break; // No more reviews available
+        }
+        
+        allReviews = allReviews.concat(pageReviews);
+        
+        if (pageReviews.length < reviewsPerPage) {
+          break; // Last page reached
+        }
+        
+        page++;
+        
+        // Small delay between pages to avoid rate limiting
+        await new Promise(r => setTimeout(r, 500));
+      }
 
-      const recentReviews = reviews.slice(0, reviewsPerApp).map((r: any) => ({
+      const recentReviews = allReviews.slice(0, reviewsPerApp).map((r: any) => ({
         score: r.score,
         text: r.text,
         date: r.date
       }));
       
-      console.log(`Got ${recentReviews.length} reviews.`);
+      console.log(`Got ${recentReviews.length} reviews (fetched ${allReviews.length} total from ${page} page(s)).`);
 
       // Generate embedding for clustering
       console.log(`Generating embedding...`);

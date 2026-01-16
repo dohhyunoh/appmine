@@ -103,119 +103,58 @@ export default async function ReportPage({ params }: { params: Promise<{ keyword
         </div>
       </div>
 
-      {analysisGroups.map((group: AnalysisGroup, groupIdx: number) => {
-        // Fix: Handle case where analysis is wrapped in array
-        const analysisData = Array.isArray(group.analysis) ? group.analysis[0] : group.analysis
-        const summary = analysisData?.sub_category_summary
-        const microNiches = analysisData?.micro_niches || []
+      {/* Sub-niches Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {analysisGroups.map((group: AnalysisGroup, groupIdx: number) => {
+          const analysisData = Array.isArray(group.analysis) ? group.analysis[0] : group.analysis
+          const summary = analysisData?.sub_category_summary
+          const microNiches = analysisData?.micro_niches || []
 
-        return (
-          <section key={groupIdx} className="mb-20">
-            
-            {/* 1. APPROACH HEADER & SUMMARY */}
-            <div className="mb-10">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-lg font-bold">
-                  {groupIdx + 1}
-                </span>
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground">
-                    {summary?.approach_name}
-                  </h2>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    Analyzed: {group.apps?.join(', ')}
+          return (
+            <Link 
+              key={groupIdx} 
+              href={`/reports/${encodeURIComponent(normalizedKeyword)}/${groupIdx}`}
+              className="group"
+            >
+              <div className="h-full p-6 border border-border bg-card rounded-xl hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer">
+                {/* Number Badge */}
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-lg font-bold">
+                    {groupIdx + 1}
+                  </span>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                      {summary?.approach_name}
+                    </h3>
                   </div>
+                </div>
+
+                {/* Apps Analyzed */}
+                <div className="text-xs text-muted-foreground mb-3">
+                  Analyzed: {group.apps?.slice(0, 2).join(', ')}{group.apps?.length > 2 ? '...' : ''}
+                </div>
+
+                {/* Quick Stats */}
+                <div className="flex gap-4 text-sm border-t border-border pt-3">
+                  <div>
+                    <span className="text-muted-foreground">Opportunities:</span>
+                    <span className="ml-1 font-semibold text-foreground">{microNiches.length}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Reviews:</span>
+                    <span className="ml-1 font-semibold text-foreground">{group.review_count || 0}</span>
+                  </div>
+                </div>
+
+                {/* View Details Arrow */}
+                <div className="mt-4 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  View details →
                 </div>
               </div>
-
-              {/* The Summary Card (Re-added but cleaner) */}
-              {summary && (
-                <div className="ml-0 md:ml-14 grid md:grid-cols-2 gap-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-                  
-                  {/* Left: What Works (The Good) */}
-                  <div className="p-6 border-b md:border-b-0 md:border-r border-border bg-blue-50/20 dark:bg-blue-900/10">
-                    <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-semibold">
-                      <CheckCircle2 className="w-5 h-5" />
-                      The Winning Formula
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {summary.what_this_approach_does_well}
-                    </p>
-                  </div>
-
-                  {/* Right: The Limitation (The Bad) */}
-                  <div className="p-6 bg-red-50/10 dark:bg-red-900/5">
-                    <div className="flex items-center gap-2 mb-3 text-red-500 dark:text-red-400 font-semibold">
-                      <AlertTriangle className="w-5 h-5" />
-                      The Core Limitation
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {summary.core_limitation}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 2. MICRO-NICHE OPPORTUNITIES (The Wedge) */}
-            <div className="ml-0 md:ml-14 space-y-8">
-              
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                <Target className="w-4 h-4" />
-                Identified Gaps (Micro-Niches)
-              </div>
-
-              {microNiches.map((niche: MicroNiche, i: number) => (
-                <div key={i} className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg transition-all duration-300">
-                  
-                  {/* Niche Header */}
-                  <div className="p-5 border-b border-border bg-muted/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                        {niche.niche_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Target: <span className="text-foreground font-medium">{niche.target_user}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* The Split: Problem vs Solution */}
-                  <div className="grid md:grid-cols-2">
-                    
-                    <div className="p-6 border-b md:border-b-0 md:border-r border-border">
-                      <h4 className="text-sm font-semibold text-red-500 dark:text-red-400 mb-3 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4" /> User Frustration
-                      </h4>
-                      <p className="text-sm text-foreground/80 leading-relaxed">
-                        {niche.core_problem}
-                      </p>
-                    </div>
-
-                    <div className="p-6 bg-green-50/30 dark:bg-green-900/5">
-                      <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" /> MVP Wedge
-                      </h4>
-                      <p className="text-sm text-foreground/90 leading-relaxed">
-                        {niche.solution}
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Footer: Why it wins */}
-                  <div className="p-3 bg-muted/50 text-xs text-center border-t border-border text-muted-foreground">
-                    <span className="font-bold">Strategy:</span> {niche.why_this_is_different}
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-            {groupIdx < analysisGroups.length - 1 && <Separator className="my-16" />}
-          </section>
-        )
-      })}
+            </Link>
+          )
+        })}
+      </div>
     </main>
   )
 }

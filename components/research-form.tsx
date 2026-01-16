@@ -164,7 +164,7 @@ export function ResearchForm() {
 
         {/* Info */}
         <p className="text-xs text-muted-foreground">
-          This will scrape App Store data, fetch reviews, generate embeddings, and analyze micro-niches. 
+          This will scrape App Store data, fetch reviews, generate embeddings, and analyze opportunities. 
           Process may take 1-2 minutes.
         </p>
       </form>

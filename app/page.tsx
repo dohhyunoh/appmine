@@ -1,149 +1,179 @@
-import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
-import { ResearchForm } from "@/components/research-form"
+'use client';
 
-export default async function Home() {
-  const supabase = await createClient()
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { normalizeKeyword } from '@/lib/utils';
 
-  // Fetch market analyses grouped by keyword
-  const { data: analyses } = await supabase
-    .from('market_analysis')
-    .select('*')
-    .order('created_at', { ascending: false })
+function ResearchForm() {
+  const [keyword, setKeyword] = useState('');
+  const maxApps = 5;
+  const reviewsPerApp = 100;
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [progress, setProgress] = useState(0);
+  const router = useRouter();
 
-  // Get unique keywords with their latest analysis
-  const keywordMap = new Map()
-  analyses?.forEach((analysis: any) => {
-    if (!keywordMap.has(analysis.keyword)) {
-      keywordMap.set(analysis.keyword, {
-        keyword: analysis.keyword,
-        analyses: [],
-        created_at: analysis.created_at,
-        total_apps: new Set(),
-        total_niches: 0
-      })
+  useEffect(() => {
+    if (!loading) {
+      setProgress(0);
+      return;
     }
-    const entry = keywordMap.get(analysis.keyword)
-    entry.analyses.push(analysis)
-    analysis.apps?.forEach((app: string) => entry.total_apps.add(app))
-    // Fix: Handle case where analysis data is wrapped in array
-    const analysisData = Array.isArray(analysis.analysis) ? analysis.analysis[0] : analysis.analysis
-    entry.total_niches += analysisData?.micro_niches?.length || 0
-  })
+    
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) return 95;
+        const diff = prev < 30 ? Math.random() * 8 : prev < 70 ? Math.random() * 4 : 0.5;
+        return Math.min(prev + diff, 95);
+      });
+    }, 800);
 
-  const reports = Array.from(keywordMap.values())
+    return () => clearInterval(interval);
+  }, [loading]);
 
-  // Fetch trend data for each keyword
-  const { data: trendData } = await supabase
-    .from('market_reports')
-    .select('keyword, trends_data')
+  const getStatusText = (p: number) => {
+    if (p < 30) return "Starting research pipeline...";
+    if (p < 60) return "Scraping reviews & data...";
+    if (p < 85) return "Analyzing patterns with AI...";
+    return "Finalizing report...";
+  };
 
-  const trendsMap = new Map()
-  trendData?.forEach((t: any) => trendsMap.set(t.keyword, t.trends_data))
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setStatus('Starting pipeline...');
+
+    try {
+      const normalizedKeyword = normalizeKeyword(keyword);
+      
+      const response = await fetch('/api/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: normalizedKeyword, maxApps, reviewsPerApp })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to run pipeline');
+      }
+
+      setProgress(100);
+      setStatus('Pipeline completed successfully!');
+      
+      setTimeout(() => {
+        router.push(`/reports/${encodeURIComponent(normalizedKeyword)}`);
+        router.refresh();
+      }, 1500);
+
+    } catch (err: any) {
+      setError(err.message);
+      setStatus('');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Market Research Dashboard
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Micro-niche analysis and opportunity discovery
-        </p>
-      </div>
-
-      {/* New Research Form */}
-      <div className="mb-8">
-        <ResearchForm />
-      </div>
-
-      {/* Reports Section Header */}
-      {reports && reports.length > 0 && (
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-foreground">
-            Your Reports
-          </h2>
-        </div>
-      )}
-
-      {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reports?.map((report) => {
-          const trends = trendsMap.get(report.keyword)
-          const trendIcon = trends?.trend_direction?.includes('GROWING') 
-            ? <TrendingUp className="w-5 h-5 text-green-500" />
-            : trends?.trend_direction?.includes('DECLINING')
-            ? <TrendingDown className="w-5 h-5 text-red-500" />
-            : <Minus className="w-5 h-5 text-gray-500" />
-
-          return (
-            <Link key={report.keyword} href={`/reports/${encodeURIComponent(report.keyword)}`}>
-              <Card className="p-6 border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-1">
-                      {report.keyword}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {report.total_apps.size} apps • {report.analyses.length} groups
-                    </p>
-                  </div>
-                  {trendIcon}
-                </div>
-
-                {/* Trend Data */}
-                {trends && (
-                  <div className="mb-4 p-3 bg-background rounded-lg">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Search Interest</span>
-                      <span className="font-semibold text-foreground">
-                        {trends.recent_interest}/100
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {trends.trend_direction}
-                    </div>
-                  </div>
-                )}
-
-                {/* Micro-niches count */}
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {report.total_niches} Micro-niches
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {(() => {
-                      const a = report.analyses[0]?.analysis
-                      const data = Array.isArray(a) ? a[0] : a
-                      return data?.sub_category_summary?.approach_name?.slice(0, 20) || 'View Report'
-                    })()}
-                  </Badge>
-                </div>
-
-                {/* Date */}
-                <div className="text-xs text-muted-foreground mt-4">
-                  {new Date(report.created_at).toLocaleDateString()}
-                </div>
-              </Card>
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* Empty State */}
-      {(!reports || reports.length === 0) && (
-        <div className="text-center py-16 px-4">
-          <p className="text-muted-foreground text-lg mb-4">No market reports yet</p>
+    <Card className="p-6 border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            New Market Research
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Use the form above to start your first market research
+            Analyze a new market niche by scraping apps and reviews
           </p>
         </div>
-      )}
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="keyword" className="block text-sm font-medium text-foreground mb-2">
+              Market Keyword
+            </label>
+            <input
+              id="keyword"
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="e.g., Habit Tracker, Meditation, Budgeting"
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+              required
+              disabled={loading}
+            />
+          </div>
+        </div>
+
+        {status && status.includes('completed') && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              {status}
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="w-full space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-foreground">Processing...</span>
+              <span className="text-xs text-muted-foreground animate-pulse">
+                {getStatusText(progress)}
+              </span>
+            </div>
+            <Progress value={progress} className="h-2.5 w-full" />
+          </div>
+        ) : (
+          <Button
+            type="submit"
+            disabled={!keyword}
+            className="w-full"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Start Research
+          </Button>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          This will scrape App Store data, fetch reviews, generate embeddings, and analyze opportunities. 
+          Process may take 1-2 minutes.
+        </p>
+      </form>
+    </Card>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+      <div className="w-full max-w-2xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-3">
+            Market Research Dashboard
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Discover opportunities and market insights
+          </p>
+        </div>
+
+        <ResearchForm />
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Access existing reports from the navigation menu above
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
