@@ -27,33 +27,6 @@ A Next.js application for discovering micro-niche opportunities by analyzing App
 2. Supabase account and project
 3. Google Gemini API key
 
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Set up environment variables (create a `.env` file):
-
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-4. Run the development server:
-
-```bash
-npm run dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000) to see the dashboard
-
-## Usage
-
 ### From the Web UI
 
 1. Enter a market keyword (e.g., "Habit Tracker", "Meditation", "Budgeting")
