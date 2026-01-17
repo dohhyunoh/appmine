@@ -1,8 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { ReportsClient } from './reports-client'
 
 export default async function ReportsPage() {
   const supabase = await createClient()
@@ -33,7 +30,13 @@ export default async function ReportsPage() {
     entry.total_niches += analysisData?.micro_niches?.length || 0
   })
 
-  const reports = Array.from(keywordMap.values())
+  const reports = Array.from(keywordMap.values()).map(report => ({
+    keyword: report.keyword,
+    total_apps: report.total_apps.size,
+    total_niches: report.total_niches,
+    created_at: report.created_at,
+    analyses: report.analyses
+  }))
 
   // Fetch trend data for each keyword
   const { data: trendData } = await supabase
@@ -43,85 +46,11 @@ export default async function ReportsPage() {
   const trendsMap = new Map()
   trendData?.forEach((t: any) => trendsMap.set(t.keyword, t.trends_data))
 
-  return (
-    <div className="p-8 max-w-6xl mx-auto">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Reports
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          View all market research reports
-        </p>
-      </div>
+  // Convert trendsMap to plain object for client component
+  const trendsData: Record<string, any> = {}
+  trendsMap.forEach((value, key) => {
+    trendsData[key] = value
+  })
 
-      {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reports?.map((report) => {
-          const trends = trendsMap.get(report.keyword)
-          const trendIcon = trends?.trend_direction?.includes('GROWING') 
-            ? <TrendingUp className="w-5 h-5 text-green-500" />
-            : trends?.trend_direction?.includes('DECLINING')
-            ? <TrendingDown className="w-5 h-5 text-red-500" />
-            : <Minus className="w-5 h-5 text-gray-500" />
-
-          return (
-            <Link key={report.keyword} href={`/reports/${encodeURIComponent(report.keyword)}`}>
-              <Card className="p-6 border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-1">
-                      {report.keyword}
-                    </h3>
-                  </div>
-                  {trendIcon}
-                </div>
-
-                {/* Trend Data */}
-                {trends && (
-                  <div className="mb-4 p-3 bg-background rounded-lg">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground"> Google Trends Score</span>
-                      <span className="font-semibold text-foreground">
-                        {trends.recent_interest}/100
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {trends.trend_direction}
-                    </div>
-                  </div>
-                )}
-
-                {/* Opportunities count */}
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {report.total_niches} Opportunities
-                  </Badge>
-                </div>
-
-                {/* Date */}
-                <div className="text-xs text-muted-foreground mt-4">
-                  Last updated: {new Date(report.created_at).toLocaleDateString()}
-                </div>
-              </Card>
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* Empty State */}
-      {(!reports || reports.length === 0) && (
-        <div className="text-center py-16 px-4">
-          <p className="text-muted-foreground text-lg mb-4">No market reports yet</p>
-          <Link 
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-          >
-            Create New Report
-          </Link>
-        </div>
-      )}
-    </div>
-  )
+  return <ReportsClient reports={reports} trendsData={trendsData} />
 }

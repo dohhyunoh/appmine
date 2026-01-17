@@ -36,10 +36,6 @@ function Navigation() {
           <FileText className="w-5 h-5 sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">Reports</span>
         </Link>
-
-        <div className="hidden md:block text-xs text-muted-foreground border-l border-border pl-6">
-          Powered by Gemini
-        </div>
       </nav>
     </header>
   );
