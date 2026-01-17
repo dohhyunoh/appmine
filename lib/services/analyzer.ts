@@ -23,9 +23,10 @@ interface MicroNiche {
   niche_name: string;
   target_user: string;
   core_problem: string;
+  example_review?: string;
+  frequency?: string;
   solution: string;
   why_this_is_different: string;
-  frequency?: number;
   opportunity_score?: number;
 }
 
@@ -34,7 +35,6 @@ interface SubCategorySummary {
   apps_analyzed: number;
   total_reviews: number;
   what_this_approach_does_well: string;
-  core_limitation: string;
 }
 
 interface Analysis {
@@ -161,13 +161,14 @@ TASK: Find SPECIFIC micro-niche opportunities that THESE SPECIFIC TYPES of apps 
 Since these apps share a similar approach, find:
 
 1. **What this approach does well** (what users love about it)
-2. **What limitations this approach has** (what users complain about)
-3. **Which user types struggle with this approach** (e.g., "ADHD users struggle with streak-based gamification")
-4. **What tweaks would make this approach perfect** (small changes, not complete redesigns)
+2. **Which user types struggle with this approach** (e.g., "ADHD users struggle with streak-based gamification")
+3. **What tweaks would make this approach perfect** (small changes, not complete redesigns)
 
 For each micro-niche:
 - Target users who WANT this type of app but find it frustrating
 - Suggest a VARIANT of this approach that fixes the issue
+- Include a REAL review quote that demonstrates the frustration
+- Indicate how frequently this issue appears (high/medium/low)
 
 OUTPUT JSON:
 {
@@ -175,14 +176,15 @@ OUTPUT JSON:
     "approach_name": "What's the common approach? (e.g., 'Gamified with social features' or 'Minimalist streak trackers')",
     "apps_analyzed": ${apps.length},
     "total_reviews": ${totalReviews},
-    "what_this_approach_does_well": "What users consistently praise",
-    "core_limitation": "The main weakness of this approach"
+    "what_this_approach_does_well": "What users consistently praise"
   },
   "micro_niches": [
     {
       "niche_name": "Very specific (e.g., 'Gamified habit tracking WITHOUT streak anxiety')",
       "target_user": "Who wants this approach but is frustrated?",
       "core_problem": "What about THIS approach frustrates them?",
+      "example_review": "Copy a real review quote from above that demonstrates this exact frustration",
+      "frequency": "high/medium/low - how often this complaint appears",
       "solution": "Feature 1",
       "why_this_is_different": "How is this different from the existing apps in this group?"
     }

@@ -159,7 +159,7 @@ export default function Home() {
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-3">
-            Market Research Dashboard
+            Market Research
           </h1>
           <p className="text-muted-foreground text-lg">
             Discover opportunities and market insights

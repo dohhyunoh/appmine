@@ -14,6 +14,8 @@ interface MicroNiche {
   niche_name: string
   target_user: string
   core_problem: string
+  example_review?: string
+  frequency?: string
   solution: string
   why_this_is_different: string
 }
@@ -27,7 +29,6 @@ interface AnalysisGroup {
       apps_analyzed: number
       total_reviews: number
       what_this_approach_does_well: string
-      core_limitation: string
     }
     micro_niches: MicroNiche[]
   }
@@ -134,26 +135,15 @@ export default async function SubNicheDetailPage({
 
       {/* Summary Card */}
       {summary && (
-        <div className="mb-12 grid md:grid-cols-2 gap-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-          {/* Left: What Works (The Good) */}
-          <div className="p-6 border-b md:border-b-0 md:border-r border-border bg-blue-50/20 dark:bg-blue-900/10">
+        <div className="mb-12 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+          {/* What Works (The Good) */}
+          <div className="p-6 bg-blue-50/20 dark:bg-blue-900/10">
             <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-semibold">
               <CheckCircle2 className="w-5 h-5" />
               Why these apps are winning
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {summary.what_this_approach_does_well}
-            </p>
-          </div>
-
-          {/* Right: The Limitation (The Bad) */}
-          <div className="p-6 bg-red-50/10 dark:bg-red-900/5">
-            <div className="flex items-center gap-2 mb-3 text-red-500 dark:text-red-400 font-semibold">
-              <AlertTriangle className="w-5 h-5" />
-              The Core Limitation
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {summary.core_limitation}
             </p>
           </div>
         </div>
@@ -180,17 +170,37 @@ export default async function SubNicheDetailPage({
             {/* Problem vs Solution Grid */}
             <div className="grid md:grid-cols-2">
               {/* User Frustration */}
-              <div className="p-6 border-b md:border-b-0 md:border-r border-border">
-                <h4 className="text-sm font-semibold text-red-500 dark:text-red-400 mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" /> User Frustration
-                </h4>
-                <p className="text-sm text-foreground/80 leading-relaxed">
-                  {niche.core_problem}
-                </p>
-              </div>
+              {niche.example_review && (
+                <div className="p-6 border-b md:border-b-0 md:border-r border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-red-500 dark:text-red-400 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" /> User Frustration
+                    </h4>
+                    {niche.frequency && (
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        niche.frequency === 'high' 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          : niche.frequency === 'medium'
+                          ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                          : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                      }`}>
+                        {niche.frequency}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-foreground/80 leading-relaxed mb-3">
+                    {niche.core_problem}
+                  </p>
+                  <div className="mt-3 p-3 bg-muted/50 rounded-lg border-l-2 border-red-500">
+                    <p className="text-xs text-muted-foreground italic">
+                      "{niche.example_review}"
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* MVP Wedge */}
-              <div className="p-6 bg-green-50/30 dark:bg-green-900/5">
+              <div className={`p-6 bg-green-50/30 dark:bg-green-900/5 ${!niche.example_review ? 'md:col-span-2' : ''}`}>
                 <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" /> Solution
                 </h4>

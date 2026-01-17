@@ -204,7 +204,6 @@ export async function runScrapingPipeline(
 ) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
-  console.log(`STARTING SCRAPER PIPELINE: "${keyword}"`);
 
   // Step 1: Trends
   const trends = await fetchTrends(keyword);
@@ -219,14 +218,6 @@ export async function runScrapingPipeline(
     apps_scraped: apps.length,
     scraped_at: new Date()
   }, { onConflict: 'keyword' });
-
-  console.log(`SCRAPING COMPLETE`);
-  console.log(`Market Trend: ${trends.trend_direction}`);
-  console.log(`Apps Scraped: ${apps.length}`);
-  console.log(`Reviews per App: ${reviewsPerApp}`);
-  console.log(`Total Reviews: ${apps.length * reviewsPerApp}`);
-  console.log(`Embeddings Generated: ${apps.filter(a => a.embedding.length > 0).length}`);
-
   return {
     trends,
     apps,

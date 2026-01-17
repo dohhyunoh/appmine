@@ -82,7 +82,7 @@ export default async function ReportsPage() {
                 {trends && (
                   <div className="mb-4 p-3 bg-background rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Search Interest</span>
+                      <span className="text-muted-foreground"> Google Trends Score</span>
                       <span className="font-semibold text-foreground">
                         {trends.recent_interest}/100
                       </span>
@@ -114,9 +114,6 @@ export default async function ReportsPage() {
       {(!reports || reports.length === 0) && (
         <div className="text-center py-16 px-4">
           <p className="text-muted-foreground text-lg mb-4">No market reports yet</p>
-          <p className="text-sm text-muted-foreground mb-6">
-            Create your first market research report to get started
-          </p>
           <Link 
             href="/"
             className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
